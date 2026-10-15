@@ -2,6 +2,7 @@
 
 1. Paper size must be A4 (210mm x 297mm).
 2. Orientation must be landscape.
+3. Only use multiple pages if all the logic cannot be neatly represented on one page.
 
 ## Text
 
@@ -34,6 +35,7 @@ visible.
 8. If the start of an arrow originates from another arrow (they are connected together) the
    the connection shape at the start must be a circle.
 9. Arrows represent nets in RTL. The net names should appear above the arrows in 8px.
+10. The net names should include the width of the net besides the net name in square brackets. eg - readData[2]
 
 ## Primitives
 
