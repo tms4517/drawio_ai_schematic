@@ -7,6 +7,10 @@
 4. The diagram must be readable and easy to understand by a junior engineer.
 5. Ignore glue logic and implementation registers unless
    they are central to understanding.
+
+## Examples
+
+Use the examples as a guide for creating schematics.
    
 ## Paper
 
