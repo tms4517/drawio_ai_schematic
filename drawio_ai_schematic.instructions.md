@@ -64,3 +64,9 @@ To clearly show logic belonging to a different clock domain:
 1. Use rounded rectangles.
 2. The rounded rectangles should have an arc size of 5.
 3. The rounded rectangles should not have a border - this is to distinguish it from modules.
+
+## Combinational logic
+
+1. Only use primitives if the combinational logic depth is 2.
+2. For combinational logic with a depth > 2, represent it using a cloud.
+
