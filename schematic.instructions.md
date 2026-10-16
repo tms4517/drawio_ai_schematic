@@ -68,6 +68,10 @@ visible.
 
 ### NAND
 
+### Multipliers
+
+### Comparators
+
 ### FIFO
 
 ### Memory
