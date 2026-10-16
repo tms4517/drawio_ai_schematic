@@ -1,3 +1,11 @@
+## Abstraction Rules
+
+1. The objective is to create a diagram that a senior RTL engineer
+   would draw on a whiteboard after 10 minutes of code review.
+2. You can only use the primitives below.
+3. Prioritize understanding over implementation accuracy.
+4. The diagram must be readable and easy to understand by a junior engineer.
+   
 ## Paper
 
 1. Paper size must be A4 (210mm x 297mm).
