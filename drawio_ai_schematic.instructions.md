@@ -5,6 +5,8 @@
 2. You can only use the primitives below.
 3. Prioritize understanding over implementation accuracy.
 4. The diagram must be readable and easy to understand by a junior engineer.
+5. Ignore glue logic and implementation registers unless
+   they are central to understanding.
    
 ## Paper
 
@@ -65,6 +67,10 @@ visible.
 ### XNOR
 
 ### NAND
+
+### FIFO
+
+### Memory
 
 ## CDC
 
