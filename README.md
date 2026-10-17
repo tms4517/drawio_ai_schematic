@@ -47,3 +47,15 @@ Generation works from the skill alone, but the self-review loop
 - the `drawio` CLI (`drawio --help`)
 
 Without them Copilot can still produce the diagram, but cannot auto-verify it.
+
+## Hand modifications
+
+A generated `.drawio` is a plain Drawio diagram — open and tweak it like any other.
+To keep hand edits on-convention, `rtl_whiteboard.mxlibrary` packages every
+primitive (gates, flip-flop variants, mux/demux, comparators, net styles, ...) as a draggable shape library.
+
+Load it in the Drawio editor (desktop, web, or the VS Code extension) via
+**File → Open Library from → Device…** and pick `rtl_whiteboard.mxlibrary`. The
+primitives then appear in the left Shapes panel — drag them onto the canvas and
+relabel. (You can also copy a shape straight out of any file under `primitives/`.)
+
