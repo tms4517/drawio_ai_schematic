@@ -89,6 +89,8 @@ visible.
     nets (or two branches) stacked on top of each other along the same path.
 17. Connect each wire to the exact port (D, EN, Q, T, ...) aligned with the
     port label's centre — never just above or below it.
+18. Net names sit a uniform small gap above their wire — the SAME gap for every
+    label — with the text middle-aligned in its box. None lies on the wire.
 
 ## Primitives
 
