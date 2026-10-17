@@ -54,26 +54,31 @@ the goal, not signoff accuracy. Frame output as a comprehension aid.
 
 ## Self-review loop (REQUIRED)
 
-After emitting the `.drawio`, export a PNG and inspect it like a reviewer; fix and
-re-render until it reads cleanly. Do not hand the user a diagram you have not looked
-at.
+After emitting the `.drawio`, FIRST run the automated verifier, fix every reported
+failure, then render a PNG and eyeball it. Do not hand the user a diagram that has
+not passed the verifier AND been looked at.
 
-Render headlessly (ALWAYS use absolute paths — the shell wrapper can drop a leading
-`cd`):
+Step 1 — run the convention checker (absolute paths; exit 0 = all pass):
+
+    python3 tools/verify_diagram.py /abs/in.drawio
+
+It prints `[PASS]/[FAIL]` for all 10 convention checks (overlaps, inside module,
+not on shapes, shapes connected, I/O on boundary, no wire through shape/text,
+no arrowhead on a junction, uniform label gap, orthogonal wires, no stacked
+nets) with the offending coordinates. Fix each FAIL and re-run until it prints
+`ALL 10 CHECKS PASSED`. Feed the log back in to drive the fixes.
+
+Step 2 — render headlessly and eyeball (ALWAYS use absolute paths — the shell
+wrapper can drop a leading `cd`):
 
     xvfb-run -a drawio -x -f png -o /abs/out.png --width 1700 /abs/in.drawio
 
 - Drawio CLI: `drawio` on PATH (e.g. `/tool/pandora64/.package/drawio-21.6.1/bin/drawio`).
 - GPU/EGL errors on stderr are harmless; the PNG is still produced.
-- Then view the PNG and check:
-  - primitives actually drew (an empty box = wrong stencil name → clone from
-    `primitives.drawio` / use the style reference);
-  - net names sit ABOVE the wire (not on it) and don't overlap shapes
-    (`verticalAlign=bottom` on edges);
-  - arrows are orthogonal; no label/shape collisions;
-  - module and CDC-domain colours/borders are correct;
-  - it fits one A4 landscape page.
-- Edit geometry/styles and re-render. Repeat until clean.
+- View the PNG and confirm: primitives drew (an empty box = wrong stencil name),
+  arrows land on ports, buses are thick, colours/borders correct, fits one A4
+  landscape page.
+- Edit and repeat Steps 1–2 until the verifier passes and it reads cleanly.
 
 ## Reference files
 
@@ -82,6 +87,8 @@ Render headlessly (ALWAYS use absolute paths — the shell wrapper can drop a le
 - `rtl_whiteboard.mxlibrary` — the same primitives packaged for the Drawio GUI (drag-and-drop; for humans / distribution).
 - `primitives.drawio` / `primitives.svg` — the full visual catalog / preview (not for cloning).
 - `examples/` — golden reference diagrams, one per query archetype (use as style guide).
+- `tools/verify_diagram.py` — the automated convention checker (run it in self-review).
+- `tools/verifyDiagram.md` — the human-readable checklist the verifier automates.
 
 ## Constraints
 
