@@ -85,6 +85,8 @@ visible.
 15. A wire feeding a branch/junction (circle) must have NO arrowhead — an
     arrowhead and a circle head must never be directly connected. Arrowheads
     appear only where a net terminates at a sink.
+16. Branches leaving a junction must diverge AT the junction — never run two
+    nets (or two branches) stacked on top of each other along the same path.
 
 ## Primitives
 
