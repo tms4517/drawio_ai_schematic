@@ -36,8 +36,10 @@ visible.
    within maintaining a 2mm margin to the internal shapes.
 4. Use a unique colour for each unique module background.
 5. Module names should be on the top left written in 10px.
-6. If a module has been instances N times, rather than drawing the module
+6. If a module has been instances N times, rather than drawing the module N
    times,represent it as a deck of cards.
+7. If a module has been instances N times, include N = ? next to the module
+   name.
 
 ### Arrows
 
@@ -56,8 +58,8 @@ visible.
    in 8px.
 10. The net names should include the width of the net besides the net name in
     square brackets. eg - readData[2].
-11. If an arrow is going into a deck of cards, the net name should be a packed
-    array eg - readData[N][2], where N is the number of instances of the module.
+11. If an arrow is going into a deck of cards (3), the net name should be a
+    packed array eg - readData[N][2], where N is the number of instances of the module.
 
 ## Primitives
 
