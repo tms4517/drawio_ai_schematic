@@ -69,15 +69,15 @@ visible.
 1. Common primitives include but are not limited to AND, OR, NOT, NAND, NOR,
    XOR, XNOR, Multiplier, Adder, Subtractor, Comparators, MUX, DEMUX, FFs.
 2. All primitive shapes must have a white background with black border.
-3. Clone the exact primitive cell from `./primitives.drawio` (the copyable Drawio
-   source for `./primitives.svg`) and relabel it — do NOT hand-roll gate shapes or
-   invent stencil names. `./primitives.svg` is only a preview; you cannot copy
-   styles out of an image.
+3. Clone the exact primitive cell from `./primitives/<category>/<name>.drawio`
+   (catalog: `./primitives/index.md`) and relabel it — do NOT hand-roll gate shapes
+   or invent stencil names. `./primitives.svg` / `./primitives.drawio` are only the
+   full visual catalog; you cannot copy styles out of the image.
 4. The primitive shapes have been limited to 2 input 1 output. If necessary,
    stretch the shapes and maintain aspect ratio to accommodate 3 or more inputs.
-5. `./primitives.drawio` includes the FF family — DFF (no-rst / async-rst /
-   sync-rst, each with and without EN) and a TFF (async-rst). Pick the variant that
-   matches the RTL (a toggle flop -> TFF; an enabled capture -> DFF + EN).
+5. `./primitives/ffs/` holds the FF family — `dff`, `dff_en`, `dff_arst`,
+   `dff_arst_en`, `dff_srst`, `dff_srst_en`, `tff_arst`. Pick the variant that
+   matches the RTL (a toggle flop -> `tff_arst`; an enabled capture -> a `*_en`).
 6. For primitives such as FIFOs and memories represent them as rectangles with
    input and output ports labelled according to implementation.
 

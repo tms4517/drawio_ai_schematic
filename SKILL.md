@@ -45,9 +45,10 @@ the goal, not signoff accuracy. Frame output as a comprehension aid.
    repeated instances → a deck of cards with `N = ?`.
 3. **Emit Drawio.** Follow every rule in `conventions.md` (paper, colours, module
    boxes, arrows/net labels with widths, primitives, combinational logic, CDC blocks).
-4. **Clone primitives** from `primitives.drawio` (copyable Drawio source) for gates,
-   muxes, FFs, etc. — never invent stencil names. Use the style reference in
-   `conventions.md` as the fallback.
+4. **Clone primitives** from `primitives/<category>/<name>.drawio` (see
+   `primitives/index.md` for the catalog). Read the file, copy its `<root>` cells,
+   give them a unique id prefix, translate to position, and relabel. Never invent
+   stencil names. The style table in `conventions.md` is the fallback for atomics.
 5. **Self-review (REQUIRED).** Render the diagram to PNG, look at it, and iterate
    until it matches `conventions.md` (see below).
 
@@ -77,7 +78,9 @@ Render headlessly (ALWAYS use absolute paths — the shell wrapper can drop a le
 ## Reference files
 
 - `conventions.md` — the full drawing specification + Drawio style reference (MUST follow).
-- `primitives.drawio` — copyable Drawio source; clone these exact cells. (`primitives.svg` is only its preview.)
+- `primitives/` — one `.drawio` per primitive, grouped (`gates/ ffs/ mux/ arith/ nets/ modules/ misc/`). **Clone these cells** — source of truth. See `primitives/index.md`.
+- `rtl_whiteboard.mxlibrary` — the same primitives packaged for the Drawio GUI (drag-and-drop; for humans / distribution).
+- `primitives.drawio` / `primitives.svg` — the full visual catalog / preview (not for cloning).
 - `examples/` — golden reference diagrams, one per query archetype (use as style guide).
 
 ## Constraints
