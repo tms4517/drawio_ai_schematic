@@ -45,12 +45,39 @@ the goal, not signoff accuracy. Frame output as a comprehension aid.
    repeated instances → a deck of cards with `N = ?`.
 3. **Emit Drawio.** Follow every rule in `conventions.md` (paper, colours, module
    boxes, arrows/net labels with widths, primitives, combinational logic, CDC blocks).
-4. **Use the primitive shapes** from `primitives.svg` for gates, muxes, FFs, etc.
+4. **Clone primitives** from `primitives.drawio` (copyable Drawio source) for gates,
+   muxes, FFs, etc. — never invent stencil names. Use the style reference in
+   `conventions.md` as the fallback.
+5. **Self-review (REQUIRED).** Render the diagram to PNG, look at it, and iterate
+   until it matches `conventions.md` (see below).
+
+## Self-review loop (REQUIRED)
+
+After emitting the `.drawio`, export a PNG and inspect it like a reviewer; fix and
+re-render until it reads cleanly. Do not hand the user a diagram you have not looked
+at.
+
+Render headlessly (ALWAYS use absolute paths — the shell wrapper can drop a leading
+`cd`):
+
+    xvfb-run -a drawio -x -f png -o /abs/out.png --width 1700 /abs/in.drawio
+
+- Drawio CLI: `drawio` on PATH (e.g. `/tool/pandora64/.package/drawio-21.6.1/bin/drawio`).
+- GPU/EGL errors on stderr are harmless; the PNG is still produced.
+- Then view the PNG and check:
+  - primitives actually drew (an empty box = wrong stencil name → clone from
+    `primitives.drawio` / use the style reference);
+  - net names sit ABOVE the wire (not on it) and don't overlap shapes
+    (`verticalAlign=bottom` on edges);
+  - arrows are orthogonal; no label/shape collisions;
+  - module and CDC-domain colours/borders are correct;
+  - it fits one A4 landscape page.
+- Edit geometry/styles and re-render. Repeat until clean.
 
 ## Reference files
 
-- `conventions.md` — the full drawing specification (MUST follow exactly).
-- `primitives.svg` — the only allowed primitive shapes (gates, MUX/DEMUX, FF variants).
+- `conventions.md` — the full drawing specification + Drawio style reference (MUST follow).
+- `primitives.drawio` — copyable Drawio source; clone these exact cells. (`primitives.svg` is only its preview.)
 - `examples/` — golden reference diagrams, one per query archetype (use as style guide).
 
 ## Constraints
