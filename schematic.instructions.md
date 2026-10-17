@@ -35,6 +35,7 @@ visible.
 3. The rounded rectangle should neatly enclose the shapes and text it contains within maintaining a 2mm margin to the internal shapes.
 4. Use a unique colour for each unique module background.
 5. Module names should be on the top left written in 10px.
+6. If a module has been instances N times, rather than drawing the module N times,represent it as a deck of cards.
 
 ### Arrows
 
@@ -49,7 +50,9 @@ visible.
 8. If the start of an arrow originates from another arrow (they are connected together) the
    the connection shape at the start must be a circle.
 9. Arrows represent nets in RTL. The net names should appear above the arrows in 8px.
-10. The net names should include the width of the net besides the net name in square brackets. eg - readData[2]
+10. The net names should include the width of the net besides the net name in square brackets. eg - readData[2].
+11. If an arrow is going into a deck of cards, the net name should be a packed
+    array eg - readData[N][2], where N is the number of instances of the module.
 
 ## Primitives
 
@@ -63,15 +66,15 @@ visible.
 6. For primitives such as FIFOs and memories represent them as rectangles with
    input and output ports labelled according to implementation.
 
-## CDC
-
-To clearly show logic belonging to a different clock domain:
-1. Use rounded rectangles.
-2. The rounded rectangles should have an arc size of 5.
-3. The rounded rectangles should not have a border - this is to distinguish it from modules.
-
 ## Combinational logic
 
 1. Only use primitives if the combinational logic depth is 2.
 2. For combinational logic with a depth > 2, represent it using a cloud.
+
+To clearly show logic belonging to a different clock domain:
+
+1. Use rounded rectangles.
+2. The rounded rectangles should have an arc size of 5.
+3. The rounded rectangles should not have a border - this is to distinguish it
+   from modules.
 
