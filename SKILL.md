@@ -62,11 +62,14 @@ Step 1 — run the convention checker (absolute paths; exit 0 = all pass):
 
     python3 tools/verify_diagram.py /abs/in.drawio
 
-It prints `[PASS]/[FAIL]` for all 10 convention checks (overlaps, inside module,
-not on shapes, shapes connected, I/O on boundary, no wire through shape/text,
-no arrowhead on a junction, uniform label gap, orthogonal wires, no stacked
-nets) with the offending coordinates. Fix each FAIL and re-run until it prints
-`ALL 10 CHECKS PASSED`. Feed the log back in to drive the fixes.
+It prints `[PASS]/[FAIL]` for every convention check — geometry (overlaps, inside
+module, not on shapes, shapes connected, I/O on boundary, no wire through
+shape/text, no arrowhead on a junction, uniform label gap, orthogonal wires, no
+stacked nets) AND style (all text Monospace + black, no legend, 8px nets, no `[1]`
+on single-bit nets, buses drawn thick, transparent labels, white/black primitives,
+rounded/borderless containers, right-aligned 10px module names, light backgrounds,
+landscape page) — with the offending coordinates. Fix each FAIL and re-run until it
+prints `ALL N CHECKS PASSED`. Feed the log back in to drive the fixes.
 
 Step 2 — render headlessly and eyeball (ALWAYS use absolute paths — the shell
 wrapper can drop a leading `cd`):
