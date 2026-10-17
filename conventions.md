@@ -23,6 +23,8 @@ Use the examples as a guide for creating schematics.
 
 1. All text should be in Monospace in black font.
 2. The font size depends on context.
+3. Do not add legend, caption, or explanatory paragraph text to the diagram. The
+   schematic must be self-explanatory through shapes and net/port labels alone.
 
 ## Colours
 
