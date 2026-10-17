@@ -17,7 +17,8 @@ Use the examples as a guide for creating schematics.
 
 1. Paper size must be A4 (210mm x 297mm).
 2. Orientation must be landscape.
-3. Only use multiple pages if all the logic cannot be neatly represented on one page.
+3. Only use multiple pages if all the logic cannot be neatly represented on one
+   page.
 
 ## Text
 
@@ -61,12 +62,18 @@ visible.
    together) the the connection shape at the start must be a circle.
 9. Arrows represent nets in RTL. The net names should appear above the arrows
    in 8px. In Drawio a label sits ON the line by default; add
-   `verticalAlign=bottom` to the edge style so the name floats above the wire, and
-   `labelBackgroundColor=none` so there is no white box behind the label.
+   `verticalAlign=bottom` to the edge style so the name floats above the wire,
+   and `labelBackgroundColor=none` so there is no white box behind the label.
 10. The net names should include the width of the net besides the net name in
     square brackets. eg - readData[2].
-11. If an arrow is going into a deck of cards (3), the net name should be a
-    packed array eg - readData[N][2], where N is the number of instances of the module.
+11. A net name must NEVER sit on top of a shape (module, primitive, FF, gate),
+    and must stay INSIDE the outer module boundary (port names included). Place
+    it on an open part of its wire; if the wire is too short, lengthen the wire
+    or slide the label along it. During self-review, verify every net name is
+    clear of all shapes and inside the module.
+12. If an arrow is going into a deck of cards (3), the net name should be a
+    packed array eg - readData[N][2], where N is the number of instances of
+    the module.
 
 ## Primitives
 
@@ -74,14 +81,15 @@ visible.
    XOR, XNOR, Multiplier, Adder, Subtractor, Comparators, MUX, DEMUX, FFs.
 2. All primitive shapes must have a white background with black border.
 3. Clone the exact primitive cell from `./primitives/<category>/<name>.drawio`
-   (catalog: `./primitives/index.md`) and relabel it — do NOT hand-roll gate shapes
-   or invent stencil names. `./primitives.svg` / `./primitives.drawio` are only the
-   full visual catalog; you cannot copy styles out of the image.
+   (catalog: `./primitives/index.md`) and relabel it — do NOT hand-roll gate
+   shapes or invent stencil names. `./primitives.svg` / `./primitives.drawio`
+   are only the full visual catalog; you cannot copy styles out of the image.
 4. The primitive shapes have been limited to 2 input 1 output. If necessary,
    stretch the shapes and maintain aspect ratio to accommodate 3 or more inputs.
 5. `./primitives/ffs/` holds the FF family — `dff`, `dff_en`, `dff_arst`,
    `dff_arst_en`, `dff_srst`, `dff_srst_en`, `tff_arst`. Pick the variant that
-   matches the RTL (a toggle flop -> `tff_arst`; an enabled capture -> a `*_en`).
+   matches the RTL (a toggle flop -> `tff_arst`; an enabled capture ->
+   a `*_en`).
 6. For primitives such as FIFOs and memories represent them as rectangles with
    input and output ports labelled according to implementation.
 
@@ -103,34 +111,36 @@ To clearly show logic belonging to a different clock domain:
 ## Drawio style reference
 
 The self-review step renders with headless Drawio, which draws only core mxGraph
-shapes and the `mxgraph.electrical` stencils. Inline `shape=stencil(...)` and names
-like `...logic_gates.xor_2` do NOT render (they appear as empty boxes). Prefer
-cloning cells from `primitives.drawio`; these verified styles are the fallback (all
-white fill, black border):
+shapes and the `mxgraph.electrical` stencils. Inline `shape=stencil(...)` and
+names like `...logic_gates.xor_2` do NOT render (they appear as empty boxes).
+Prefer cloning cells from `primitives.drawio`; these verified styles are the
+fallback (all white fill, black border):
 
-| Element | Style |
-| --- | --- |
-| AND / OR / XOR | `shape=mxgraph.electrical.logic_gates.logic_gate;operation=and\|or\|xor;` |
-| NAND / NOR / XNOR | add `negating=1;negSize=0.15;` to the matching gate |
-| NOT (inverter) | `shape=mxgraph.electrical.logic_gates.inverter_2;` |
-| mirror a gate (output on the left) | add `direction=west;` |
-| MUX / DEMUX | `shape=trapezoid;perimeter=trapezoidPerimeter;shapeInside=1;fixedSize=1;rotation=90;` (`-90` to flip) |
-| Comb. logic cloud (depth > 2) | `ellipse;shape=cloud;` |
-| FF | clone from `primitives.drawio` (rect + `triangle;shapeInside=1;direction=north` clock notch + D/Q/EN/ARST port text) |
-| Module box | `rounded=1;arcSize=5;` + unique `fillColor` + dark `strokeColor`, name top-left 10px |
-| Clock-domain / CDC group | `rounded=1;arcSize=5;strokeColor=none;` (borderless) |
-| Fanout junction dot | `ellipse;fillColor=#000000;strokeColor=#000000;` ~8x8 |
+- AND / OR / XOR:
+  `shape=mxgraph.electrical.logic_gates.logic_gate;operation=and|or|xor;`
+- NAND / NOR / XNOR: add `negating=1;negSize=0.15;` to the matching gate
+- NOT (inverter): `shape=mxgraph.electrical.logic_gates.inverter_2;`
+- Mirror a gate (output on the left): add `direction=west;`
+- MUX / DEMUX (`-90` to flip):
+  `shape=trapezoid;perimeter=trapezoidPerimeter;shapeInside=1;fixedSize=1;rotation=90;`
+- Comb. logic cloud (depth > 2): `ellipse;shape=cloud;`
+- FF: clone from `primitives.drawio` — rect +
+  `triangle;shapeInside=1;direction=north` clock notch + D/Q/EN/ARST port text
+- Module box: `rounded=1;arcSize=5;` + unique `fillColor` + dark `strokeColor`,
+  name top-left 10px
+- Clock-domain / CDC group: `rounded=1;arcSize=5;strokeColor=none;` (borderless)
+- Fanout junction dot: `ellipse;fillColor=#000000;strokeColor=#000000;` ~8x8
 
 Net (edge) styles — keep wires orthogonal with
-`edgeStyle=orthogonalEdgeStyle;rounded=0;` and float the label above the wire with
-`verticalAlign=bottom;labelBackgroundColor=none;fontFamily=monospace;fontSize=8;`.
-Net labels must have a transparent background (`labelBackgroundColor=none`) — never a
-white box behind them.
+`edgeStyle=orthogonalEdgeStyle;rounded=0;` and float the label above the wire
+with these label styles:
+`verticalAlign=bottom;labelBackgroundColor=none;fontFamily=monospace;fontSize=8`
+Net labels must have a transparent background (`labelBackgroundColor=none`) —
+never a white box behind them.
 
-| Net | Style |
-| --- | --- |
-| Single-bit net | `endArrow=classic;html=1;` |
-| Bus `name[W]` | `endArrow=classic;html=1;strokeWidth=2;` |
-| Crossing (not connected) | add `jumpStyle=arc;jumpSize=10;` |
-| Branch off another net | start from a junction dot, or add `startArrow=oval;startFill=1;` |
+- Single-bit net: `endArrow=classic;html=1;`
+- Bus `name[W]`: `endArrow=classic;html=1;strokeWidth=2;`
+- Crossing (not connected): add `jumpStyle=arc;jumpSize=10;`
+- Branch off another net: start from a junction dot, or add
+  `startArrow=oval;startFill=1;`
 
