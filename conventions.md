@@ -56,7 +56,9 @@ visible.
 8. If the start of an arrow originates from another arrow (they are connected
    together) the the connection shape at the start must be a circle.
 9. Arrows represent nets in RTL. The net names should appear above the arrows
-   in 8px.
+   in 8px. In Drawio a label sits ON the line by default; add
+   `verticalAlign=bottom` to the edge style so the name floats above the wire and
+   the line stays unbroken.
 10. The net names should include the width of the net besides the net name in
     square brackets. eg - readData[2].
 11. If an arrow is going into a deck of cards (3), the net name should be a
@@ -67,10 +69,15 @@ visible.
 1. Common primitives include but are not limited to AND, OR, NOT, NAND, NOR,
    XOR, XNOR, Multiplier, Adder, Subtractor, Comparators, MUX, DEMUX, FFs.
 2. All primitive shapes must have a white background with black border.
-3. Use primitive shapes from `./primitives.svg` .
+3. Clone the exact primitive cell from `./primitives.drawio` (the copyable Drawio
+   source for `./primitives.svg`) and relabel it — do NOT hand-roll gate shapes or
+   invent stencil names. `./primitives.svg` is only a preview; you cannot copy
+   styles out of an image.
 4. The primitive shapes have been limited to 2 input 1 output. If necessary,
    stretch the shapes and maintain aspect ratio to accommodate 3 or more inputs.
-5. Common FF variants are shown in `./primitives.svg`.
+5. `./primitives.drawio` includes the FF family — DFF (no-rst / async-rst /
+   sync-rst, each with and without EN) and a TFF (async-rst). Pick the variant that
+   matches the RTL (a toggle flop -> TFF; an enabled capture -> DFF + EN).
 6. For primitives such as FIFOs and memories represent them as rectangles with
    input and output ports labelled according to implementation.
 
@@ -88,4 +95,36 @@ To clearly show logic belonging to a different clock domain:
 2. The rounded rectangles should have an arc size of 5.
 3. The rounded rectangles should not have a border - this is to distinguish it
    from modules.
+
+## Drawio style reference
+
+The self-review step renders with headless Drawio, which draws only core mxGraph
+shapes and the `mxgraph.electrical` stencils. Inline `shape=stencil(...)` and names
+like `...logic_gates.xor_2` do NOT render (they appear as empty boxes). Prefer
+cloning cells from `primitives.drawio`; these verified styles are the fallback (all
+white fill, black border):
+
+| Element | Style |
+| --- | --- |
+| AND / OR / XOR | `shape=mxgraph.electrical.logic_gates.logic_gate;operation=and\|or\|xor;` |
+| NAND / NOR / XNOR | add `negating=1;negSize=0.15;` to the matching gate |
+| NOT (inverter) | `shape=mxgraph.electrical.logic_gates.inverter_2;` |
+| mirror a gate (output on the left) | add `direction=west;` |
+| MUX / DEMUX | `shape=trapezoid;perimeter=trapezoidPerimeter;shapeInside=1;fixedSize=1;rotation=90;` (`-90` to flip) |
+| Comb. logic cloud (depth > 2) | `ellipse;shape=cloud;` |
+| FF | clone from `primitives.drawio` (rect + `triangle;shapeInside=1;direction=north` clock notch + D/Q/EN/ARST port text) |
+| Module box | `rounded=1;arcSize=5;` + unique `fillColor` + dark `strokeColor`, name top-left 10px |
+| Clock-domain / CDC group | `rounded=1;arcSize=5;strokeColor=none;` (borderless) |
+| Fanout junction dot | `ellipse;fillColor=#000000;strokeColor=#000000;` ~8x8 |
+
+Net (edge) styles — keep wires orthogonal with
+`edgeStyle=orthogonalEdgeStyle;rounded=0;` and float the label above the wire with
+`verticalAlign=bottom;fontFamily=monospace;fontSize=8;`:
+
+| Net | Style |
+| --- | --- |
+| Single-bit net | `endArrow=classic;html=1;` |
+| Bus `name[W]` | `endArrow=classic;html=1;strokeWidth=2;` |
+| Crossing (not connected) | add `jumpStyle=arc;jumpSize=10;` |
+| Branch off another net | start from a junction dot, or add `startArrow=oval;startFill=1;` |
 
