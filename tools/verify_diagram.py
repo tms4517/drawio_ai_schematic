@@ -53,7 +53,7 @@ def strip(v):
 
 
 class Cell:
-    __slots__ = ("id", "style", "value", "edge", "x", "y", "w", "h", "pts",
+    __slots__ = ("id", "style", "value", "rawval", "edge", "x", "y", "w", "h", "pts",
                  "src", "tgt", "sp", "tp", "mids")
 
 
@@ -62,7 +62,8 @@ def parse(model):
     for c in model.iter("mxCell"):
         o = Cell()
         o.id = c.get("id"); o.style = c.get("style") or ""
-        o.value = strip(c.get("value")); o.edge = c.get("edge") == "1"
+        o.value = strip(c.get("value")); o.rawval = c.get("value") or ""
+        o.edge = c.get("edge") == "1"
         o.src = c.get("source"); o.tgt = c.get("target")
         o.x = o.y = o.w = o.h = None; o.pts = []; o.sp = o.tp = None; o.mids = []
         g = c.find("mxGeometry")
@@ -131,6 +132,47 @@ def near_perim(p, b, tol=TOL):
     return on_x or on_y
 
 
+# ===================== style helpers =====================
+def sattr(style, key):
+    m = re.search(rf"\b{key}=([^;]+)", style)
+    return m.group(1).strip() if m else None
+
+def is_monospace(style, raw):
+    fam = sattr(style, "fontFamily")
+    if fam is not None:
+        return "mono" in fam.lower()
+    m = re.search(r'face="([^"]*)"', raw or "", re.I) or re.search(r"font-family:\s*([^;\"']+)", raw or "", re.I)
+    return "mono" in m.group(1).lower() if m else False
+
+def is_black(style, raw):
+    fc = sattr(style, "fontColor")
+    if fc and fc.lower() not in ("#000000", "#000", "black"):
+        return False
+    m = re.search(r"(?<!background-)color:\s*(#[0-9a-fA-F]{3,6})", raw or "")
+    return not (m and m.group(1).lower() not in ("#000000", "#000"))
+
+def luminance(hexs):
+    hexs = hexs.lstrip("#")
+    if len(hexs) == 3:
+        hexs = "".join(ch * 2 for ch in hexs)
+    try:
+        r, g, b = int(hexs[0:2], 16), int(hexs[2:4], 16), int(hexs[4:6], 16)
+    except ValueError:
+        return 1.0
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+def edge_below(label, edges):
+    cx = label.x + label.w / 2
+    lb = label.y + label.h
+    best, bg = None, None
+    for e in edges:
+        for (x1, y1), (x2, y2) in zip(e.pts, e.pts[1:]):
+            if abs(y1 - y2) < 1e-6 and min(x1, x2) - 2 <= cx <= max(x1, x2) + 2:
+                if y1 >= lb - 1 and y1 - lb <= GAP_MAX and (bg is None or y1 - lb < bg):
+                    bg, best = y1 - lb, e
+    return best
+
+
 # ===================== classification =====================
 def classify(cells):
     verts = [c for c in cells.values() if c.id not in ("0", "1") and not c.edge and c.x is not None]
@@ -165,7 +207,8 @@ def classify(cells):
     netlabels = [l for l in labels if l not in captions]
 
     return dict(edges=edges, junctions=junctions, shapes=shapes, module=module,
-                ports=ports, labels=labels, captions=captions, netlabels=netlabels)
+                containers=containers, ports=ports, labels=labels, captions=captions,
+                netlabels=netlabels)
 
 
 def wire_below(label, edges):
@@ -183,8 +226,9 @@ def wire_below(label, edges):
 
 # ===================== checks =====================
 class Log:
-    def __init__(self): self.fail = 0
+    def __init__(self): self.fail = 0; self.total = 0
     def check(self, ok, n, desc, details=()):
+        self.total += 1
         print(f"[{'PASS' if ok else 'FAIL'}] {n:>2}. {desc}")
         if not ok:
             self.fail += 1
@@ -193,7 +237,8 @@ class Log:
 
 
 def run(path):
-    cells = parse(load_model(path))
+    model = load_model(path)
+    cells = parse(model)
     c = classify(cells)
     log = Log()
     shapes, edges, junc = c["shapes"], c["edges"], c["junctions"]
@@ -296,7 +341,96 @@ def run(path):
                 bad.append(f"{w1} and {w2} stacked {o1}@{f1:.0f}")
     log.check(not bad, 10, "No two net segments lie stacked on top of each other", bad)
 
-    print(f"\n{'ALL 10 CHECKS PASSED' if log.fail == 0 else f'{log.fail}/10 CHECKS FAILED'}")
+    # ---- style / text / colour / paper conventions ----
+    conts = c["containers"]
+    syncs = [s for s in shapes if "rounded=1" in s.style]            # module-instance boxes
+    prims = [s for s in shapes if s not in syncs]                    # FF rects + gates
+    texted = [t for t in cells.values() if t.value and not t.edge and t.x is not None]
+
+    # 11 monospace
+    bad = [f"'{t.value}' is not Monospace" for t in texted if not is_monospace(t.style, t.rawval)]
+    log.check(not bad, 11, "All text is Monospace", bad)
+
+    # 12 black text
+    bad = [f"'{t.value}' is not black" for t in texted if not is_black(t.style, t.rawval)]
+    log.check(not bad, 12, "All text is black", bad)
+
+    # 13 no legend / paragraph
+    bad = [f"'{t.value[:50]}...'" for t in texted if len(t.value) > 50 or t.value.count(". ") >= 1]
+    log.check(not bad, 13, "No legend or paragraph text", bad)
+
+    # 14 net names 8px
+    bad = [f"'{l.value}' fontSize={sattr(l.style, 'fontSize')}" for l in netlabels if sattr(l.style, "fontSize") != "8"]
+    log.check(not bad, 14, "Net names are 8px", bad)
+
+    # 15 single-bit nets have no [1]
+    bad = [f"'{l.value}'" for l in netlabels if re.search(r"\[1\]$", l.value)]
+    log.check(not bad, 15, "Single-bit nets have no [1] suffix", bad)
+
+    # 16 buses drawn thick
+    bad = []
+    for l in netlabels:
+        m = re.search(r"\[([^\]]+)\]$", l.value)
+        if m and m.group(1) != "1":
+            e = edge_below(l, edges)
+            sw = sattr(e.style, "strokeWidth") if e else None
+            if sw is None or float(sw) < 2:
+                bad.append(f"bus '{l.value}' wire strokeWidth={sw} (need >=2)")
+    log.check(not bad, 16, "Buses are drawn with strokeWidth>=2", bad)
+
+    # 17 transparent net labels
+    bad = [f"'{l.value}' labelBackgroundColor={sattr(l.style, 'labelBackgroundColor')}"
+           for l in netlabels if sattr(l.style, "labelBackgroundColor") != "none"]
+    log.check(not bad, 17, "Net labels have a transparent background", bad)
+
+    # 18 primitives white fill / black border
+    bad = []
+    for s in prims:
+        fc, st = sattr(s.style, "fillColor"), sattr(s.style, "strokeColor")
+        if fc and fc.lower() not in ("#ffffff", "#fff", "white", "none"):
+            bad.append(f"primitive {tuple(round(v) for v in bbox(s))} fill {fc}")
+        if st and st.lower() not in ("#000000", "#000", "black"):
+            bad.append(f"primitive {tuple(round(v) for v in bbox(s))} stroke {st}")
+    log.check(not bad, 18, "Primitives have a white fill and black border", bad)
+
+    # 19 containers rounded (arcSize=5); CDC domains borderless
+    bad = []
+    for cont in conts:
+        if "rounded=1" not in cont.style:
+            bad.append(f"container '{cont.value}' is not a rounded rectangle")
+        elif sattr(cont.style, "arcSize") != "5":
+            bad.append(f"container '{cont.value}' arcSize={sattr(cont.style, 'arcSize')} (need 5)")
+        if cont is not mod and sattr(cont.style, "strokeColor") != "none":
+            bad.append(f"CDC domain '{cont.value}' has a border (should be borderless)")
+    log.check(not bad, 19, "Containers are rounded (arcSize=5); CDC domains borderless", bad)
+
+    # 20 module/instance names top-right, 10px
+    bad = []
+    for n in conts + syncs:
+        if not n.value:
+            continue
+        if sattr(n.style, "align") != "right":
+            bad.append(f"'{n.value}' is not right-aligned")
+        if sattr(n.style, "verticalAlign") != "top":
+            bad.append(f"'{n.value}' is not top-aligned")
+        if sattr(n.style, "fontSize") != "10":
+            bad.append(f"'{n.value}' fontSize={sattr(n.style, 'fontSize')} (need 10)")
+    log.check(not bad, 20, "Module / instance names are top-right, 10px", bad)
+
+    # 21 light backgrounds
+    bad = [f"'{s.value or '(unnamed)'}' dark fill {sattr(s.style, 'fillColor')}"
+           for s in conts + shapes
+           if sattr(s.style, "fillColor") and sattr(s.style, "fillColor").startswith("#")
+           and luminance(sattr(s.style, "fillColor")) < 0.5]
+    log.check(not bad, 21, "Background colours are light", bad)
+
+    # 22 landscape A4 page
+    pw, ph = float(model.get("pageWidth") or 0), float(model.get("pageHeight") or 0)
+    bad = [] if (pw and ph and pw > ph) else [f"page {pw:.0f}x{ph:.0f} is not landscape"]
+    log.check(not bad, 22, "Page is landscape (A4)", bad)
+
+    passed = log.total - log.fail
+    print(f"\n{'ALL %d CHECKS PASSED' % log.total if log.fail == 0 else f'{log.fail}/{log.total} CHECKS FAILED'}")
     return 1 if log.fail else 0
 
 
