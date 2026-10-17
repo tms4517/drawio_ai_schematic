@@ -62,7 +62,7 @@ visible.
 ## Primitives
 
 1. Common primitives include but are not limited to AND, OR, NOT, NAND, NOR,
-   XOR, XNOR, MULTIPLIER, ADDER, SUBTRACTOR, Comparators, MUX, DEMUX, FFs.
+   XOR, XNOR, Multiplier, Adder, Subtractor, Comparators, MUX, DEMUX, FFs.
 2. All primitive shapes must have a white background with black border.
 3. Use primitive shapes from `./primitives.svg` .
 4. The primitive shapes have been limited to 2 input 1 output. If necessary,
