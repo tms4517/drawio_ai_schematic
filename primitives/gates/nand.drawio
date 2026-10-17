@@ -1,0 +1,5 @@
+<mxfile host="rtl-whiteboard" type="device">
+  <diagram id="nand" name="nand">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="400" pageHeight="300" math="0" shadow="0"><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="T1HOtW5GgF_qrNlgHjuF-3" parent="1" style="verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;shape=mxgraph.electrical.logic_gates.logic_gate;operation=and;negating=1;negSize=0.15;" value="" vertex="1"><mxGeometry height="40" width="40" x="20" y="20" as="geometry"/></mxCell></root></mxGraphModel>
+  </diagram>
+</mxfile>
