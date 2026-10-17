@@ -2,10 +2,11 @@
 
 1. The objective is to create a diagram that a senior RTL engineer
    would draw on a whiteboard after 10 minutes of code review.
-2. You can only use the primitives below.
-3. Prioritize understanding over implementation accuracy.
-4. The diagram must be readable and easy to understand by a junior engineer.
-5. Ignore glue logic and implementation registers unless
+2. Create diagrams using **Drawio**.
+3. Use the primitives below.
+4. Prioritize understanding over implementation accuracy.
+5. The diagram must be readable and easy to understand by a junior engineer.
+6. Ignore glue logic and implementation registers unless
    they are central to understanding.
 
 ## Examples
@@ -76,7 +77,8 @@ visible.
 ## Combinational logic
 
 1. Only use primitives if the combinational logic depth is 2.
-2. For combinational logic with a depth > 2, represent it using a cloud.
+2. For combinational logic with a depth > 2, represent it using a cloud. If it
+   is important for the explanation then you may use prmitives for a depth > 2.
 
 ## CDC
 
