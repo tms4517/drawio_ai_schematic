@@ -1,7 +1,7 @@
 # RTL Whiteboard
 
 The aim of this repository is to generate a schematic an engineer would create
-by hand to explain the functionality of a design so reviewers or other 
+by hand to explain the functionality of a design so reviewers or other
 engineers can gain an understanding of what's implemented.
 
 ## Motivation
@@ -15,10 +15,10 @@ Traditional EDA tools can generate schematics, but they require setup:
 - Library models
 - Elaboration and synthesis flows
 
-Even after that effort, the resulting schematic is typically a faithful representation 
+Even after that effort, the resulting schematic is typically a faithful representation
 of the implementation rather than a useful explanation of the design.
 
-When engineers review RTL, they rarely think in terms of gates, muxes, and intermediate nets. 
+When engineers review RTL, they rarely think in terms of gates, muxes, and intermediate nets.
 Instead, they build a mental model of the design and can sketch something that is functionally
 close to the RTL but not accurate.
 
@@ -33,3 +33,17 @@ For example:
 - **Datapath Exploration**: Show the datapath of rx_data.
 - **Signal Understanding**: Show how packet_valid is generated.
 - **Design Comprehension**: Explain how initialization completes.
+
+# Skills
+
+Clone the repo into your skills dir.
+
+## Dependencies
+
+Generation works from the skill alone, but the self-review loop
+(`tools/verify_diagram.py` and headless PNG rendering) additionally needs:
+
+- `python3`
+- the `drawio` CLI (`drawio --help`)
+
+Without them Copilot can still produce the diagram, but cannot auto-verify it.
