@@ -36,10 +36,12 @@ visible.
 3. The rounded rectangle should neatly enclose the shapes and text it contains
    within maintaining a 2mm margin to the internal shapes.
 4. Use a unique colour for each unique module background.
-5. Module names should be on the top left written in 10px.
-6. If a module has been instances N times, rather than drawing the module N
+5. Module names should be on the top right written in 10px.
+6. A module label is the module (type) name only — never embed the instance
+   name in it (e.g. use `xlnx_sync_bit`, not `xlnx_sync_bit u_syncInitiate`).
+7. If a module has been instances N times, rather than drawing the module N
    times,represent it as a deck of cards.
-7. If a module has been instances N times, include N = ? next to the module
+8. If a module has been instances N times, include N = ? next to the module
    name.
 
 ### Arrows
