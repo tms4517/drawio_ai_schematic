@@ -11,7 +11,7 @@
 ## Examples
 
 Use the examples as a guide for creating schematics.
-   
+
 ## Paper
 
 1. Paper size must be A4 (210mm x 297mm).
@@ -53,32 +53,15 @@ visible.
 
 ## Primitives
 
-1. All primitive shapes must have a white background with black border.
-2. Use primitive shapes from `./primitives.svg` .
-
-### Flip flops
-
-1. Use flip-flops
-
-### AND
-
-### OR
-
-### NOT
-
-### XOR
-
-### XNOR
-
-### NAND
-
-### Multipliers
-
-### Comparators
-
-### FIFO
-
-### Memory
+1. Common primitives include but are not limited to AND, OR, NOT, NAND, NOR,
+   XOR, XNOR, MULTIPLIER, ADDER, SUBTRACTOR, Comparators, MUX, DEMUX, FFs.
+2. All primitive shapes must have a white background with black border.
+3. Use primitive shapes from `./primitives.svg` .
+4. The primitive shapes have been limited to 2 input 1 output. If necessary,
+   stretch the shapes and maintain aspect ratio to accommodate 3 or more inputs.
+5. Common FF variants are shown in `./primitives.svg`.
+6. For primitives such as FIFOs and memories represent them as rectangles with
+   input and output ports labelled according to implementation.
 
 ## CDC
 
