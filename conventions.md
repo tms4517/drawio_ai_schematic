@@ -61,8 +61,8 @@ visible.
    together) the the connection shape at the start must be a circle.
 9. Arrows represent nets in RTL. The net names should appear above the arrows
    in 8px. In Drawio a label sits ON the line by default; add
-   `verticalAlign=bottom` to the edge style so the name floats above the wire and
-   the line stays unbroken.
+   `verticalAlign=bottom` to the edge style so the name floats above the wire, and
+   `labelBackgroundColor=none` so there is no white box behind the label.
 10. The net names should include the width of the net besides the net name in
     square brackets. eg - readData[2].
 11. If an arrow is going into a deck of cards (3), the net name should be a
@@ -123,7 +123,9 @@ white fill, black border):
 
 Net (edge) styles — keep wires orthogonal with
 `edgeStyle=orthogonalEdgeStyle;rounded=0;` and float the label above the wire with
-`verticalAlign=bottom;fontFamily=monospace;fontSize=8;`:
+`verticalAlign=bottom;labelBackgroundColor=none;fontFamily=monospace;fontSize=8;`.
+Net labels must have a transparent background (`labelBackgroundColor=none`) — never a
+white box behind them.
 
 | Net | Style |
 | --- | --- |
