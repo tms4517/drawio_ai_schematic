@@ -87,6 +87,8 @@ visible.
     appear only where a net terminates at a sink.
 16. Branches leaving a junction must diverge AT the junction — never run two
     nets (or two branches) stacked on top of each other along the same path.
+17. Connect each wire to the exact port (D, EN, Q, T, ...) aligned with the
+    port label's centre — never just above or below it.
 
 ## Primitives
 
