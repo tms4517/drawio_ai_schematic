@@ -54,8 +54,10 @@ visible.
 3. Arrows must have a black font.
 4. If an arrow is going away from an object the connector must be an arrow at
    the end with no specific connector shape at the start.
-5. Inputs are always to the left boundary of the shape.
-6. Outputs are always from the right boundary of the shape.
+5. Inputs are always to the left boundary of the shape; a module's input wires
+   must start exactly on the module boundary.
+6. Outputs are always from the right boundary of the shape; a module's output
+   wires must end exactly on the module boundary.
 7. If an arrow overlaps another arrow (not intended to be connected) use an arc
    line jump of 10pt.
 8. If the start of an arrow originates from another arrow (they are connected
@@ -64,8 +66,9 @@ visible.
    in 8px. In Drawio a label sits ON the line by default; add
    `verticalAlign=bottom` to the edge style so the name floats above the wire,
    and `labelBackgroundColor=none` so there is no white box behind the label.
-10. The net names should include the width of the net besides the net name in
-    square brackets. eg - readData[2].
+10. Show the net width in square brackets only for buses (more than 1 bit), eg
+    readData[2]; a single-bit net shows just its name (no [1]). Draw buses with
+    strokeWidth=2 (thicker line); single-bit nets use the default thickness.
 11. A net name must NEVER sit on top of a shape (module, primitive, FF, gate),
     and must stay INSIDE the outer module boundary (port names included). Place
     it on an open part of its wire; if the wire is too short, lengthen the wire
@@ -74,6 +77,14 @@ visible.
 12. If an arrow is going into a deck of cards (3), the net name should be a
     packed array eg - readData[N][2], where N is the number of instances of
     the module.
+13. A wire must NEVER pass through a shape or through text (net names, labels,
+    captions). Route it through open channels with explicit waypoints, and
+    use arc jumps where unrelated wires cross. Verify during self-review.
+14. A flip-flop is named by the net on its Q output; do not add a separate name
+    caption that a wire could cross.
+15. A wire feeding a branch/junction (circle) must have NO arrowhead — an
+    arrowhead and a circle head must never be directly connected. Arrowheads
+    appear only where a net terminates at a sink.
 
 ## Primitives
 
