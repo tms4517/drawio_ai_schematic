@@ -49,6 +49,10 @@ visible.
 9. Every submodule box labels its ports with the instance's actual RTL port
    names, placed inside the box next to each connecting wire (read them from the
    instantiation in the RTL). A reader identifies a wire by the port it lands on.
+   For a deck of cards this is identical to a single box: place the port-name
+   labels inside the FRONT card, left for inputs and right for outputs. The label
+   sits inside the instance, so it needs NO wire stub beneath it — the verifier
+   treats text inside a named instance box (single box or deck) as a port.
 
 ### Arrows
 

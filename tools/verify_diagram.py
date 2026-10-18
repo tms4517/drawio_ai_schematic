@@ -200,7 +200,27 @@ def classify(cells):
     module = max(containers, key=lambda c: c.w * c.h) if containers else None
 
     shape_boxes = [bbox(s) for s in shapes]
-    ports = [t for t in texts if any(pt_in(center(t), b) for b in shape_boxes) or t.value in PORT_TOKENS]
+
+    # A named rounded-rect instance (single box OR a deck-of-cards front card) is a
+    # "port host": text whose centre falls inside it is a PORT, and a wire may land
+    # on its edge. A deck's front card is a container (it overlaps its sibling
+    # cards) so it is not in `shapes`; detect it here so a deck can label its ports
+    # in place -- exactly like a single box -- without a wire beneath each label.
+    def _similar(a, b):
+        return (abs(a.w - b.w) <= 0.2 * max(a.w, b.w) and
+                abs(a.h - b.h) <= 0.2 * max(a.h, b.h))
+    submodule_boxes = []
+    for R in significant:
+        if R is module or "rounded=1" not in R.style or not strip(R.value):
+            continue
+        Rb = bbox(R)
+        real = [o for o in significant if o is not R and pt_in(center(o), Rb)
+                and not (not strip(o.value) and "rounded=1" in o.style and _similar(o, R))]
+        if not real:
+            submodule_boxes.append(Rb)
+
+    port_hosts = shape_boxes + submodule_boxes
+    ports = [t for t in texts if any(pt_in(center(t), b) for b in port_hosts) or t.value in PORT_TOKENS]
     labels = [t for t in texts if t not in ports]
 
     def is_caption(l):                                            # a shape sits just above it
@@ -215,7 +235,7 @@ def classify(cells):
 
     return dict(edges=edges, junctions=junctions, shapes=shapes, module=module,
                 containers=containers, ports=ports, labels=labels, captions=captions,
-                netlabels=netlabels)
+                netlabels=netlabels, submodule_boxes=submodule_boxes)
 
 
 def wire_below(label, edges):
@@ -281,7 +301,9 @@ def run(path):
     log.check(not bad, 4, "Shapes are connected (no floating shape)", bad)
 
     # 5
-    def on_shape(p): return any(near_perim(p, bbox(s)) or pt_in(p, bbox(s)) for s in shapes)
+    sub_boxes = c["submodule_boxes"]
+    def on_shape(p): return (any(near_perim(p, bbox(s)) or pt_in(p, bbox(s)) for s in shapes)
+                             or any(near_perim(p, b) or pt_in(p, b) for b in sub_boxes))
     def on_junc(p): return any(pt_in(p, bbox(j), -3) or near_perim(p, bbox(j), 4) for j in junc)
     def on_bound(p): return (abs(p[0] - mb[0]) <= TOL or abs(p[0] - mb[2]) <= TOL or
                              abs(p[1] - mb[1]) <= TOL or abs(p[1] - mb[3]) <= TOL)
