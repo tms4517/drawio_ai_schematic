@@ -523,22 +523,32 @@ def run(path):
     log.check(not bad, 25, "Modules instanced N>1 times are drawn as a deck of cards", bad)
 
     # 26 module-boundary ports enter/leave on the correct side (conventions
-    #    Arrows 5-6): inputs (i_*) must touch the LEFT edge of the outer module,
-    #    outputs (o_*) the RIGHT edge. Flag the unambiguous wrong-side case -- an
-    #    input whose boundary endpoint is on the right edge, or an output whose
-    #    boundary endpoint is on the left edge. (Top/bottom are left alone.)
-    def on_vedge(p, xref):
-        return abs(p[0] - xref) <= TOL and mb[1] - TOL <= p[1] <= mb[3] + TOL
+    #    Arrows 5-6): inputs (i_*) must land on the LEFT edge of the outer module
+    #    and outputs (o_*) on the RIGHT edge. Any other side -- including top or
+    #    bottom -- is wrong: keeping inputs left / outputs right is what makes the
+    #    wires traceable, regardless of how long that makes them.
+    def mod_side(p):
+        if abs(p[0] - mb[0]) <= TOL and mb[1] - TOL <= p[1] <= mb[3] + TOL:
+            return "left"
+        if abs(p[0] - mb[2]) <= TOL and mb[1] - TOL <= p[1] <= mb[3] + TOL:
+            return "right"
+        if abs(p[1] - mb[1]) <= TOL and mb[0] - TOL <= p[0] <= mb[2] + TOL:
+            return "top"
+        if abs(p[1] - mb[3]) <= TOL and mb[0] - TOL <= p[0] <= mb[2] + TOL:
+            return "bottom"
+        return None
     bad = []
     for e in edges:
         name = strip(e.value)
         if not name:
             continue
-        ends = (e.pts[0], e.pts[-1])
-        if name.startswith("i_") and any(on_vedge(p, mb[2]) for p in ends):
-            bad.append(f"input '{name}' enters on the right edge (inputs must enter on the left)")
-        elif name.startswith("o_") and any(on_vedge(p, mb[0]) for p in ends):
-            bad.append(f"output '{name}' leaves on the left edge (outputs must exit on the right)")
+        sides = {s for s in (mod_side(e.pts[0]), mod_side(e.pts[-1])) if s}
+        if not sides:
+            continue
+        if name.startswith("i_") and "left" not in sides:
+            bad.append(f"input '{name}' lands on the {'/'.join(sorted(sides))} edge (inputs must enter on the left)")
+        elif name.startswith("o_") and "right" not in sides:
+            bad.append(f"output '{name}' lands on the {'/'.join(sorted(sides))} edge (outputs must exit on the right)")
     log.check(not bad, 26, "Module inputs enter on the left edge, outputs exit on the right", bad)
 
     # 27 a module is labelled by its box name only (Modules 6) and the schematic

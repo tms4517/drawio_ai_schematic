@@ -58,6 +58,10 @@ visible.
    must start exactly on the module boundary.
 6. Outputs are always from the right boundary of the shape; a module's output
    wires must end exactly on the module boundary.
+   A module port lands on the LEFT (inputs) or RIGHT (outputs) edge ONLY — never
+   route a port to the top or bottom edge to shorten a wire. Keeping inputs left
+   and outputs right is what lets a reader trace signal flow; a long wire is an
+   acceptable cost, a wrong-side port is not.
 7. If an arrow overlaps another arrow (not intended to be connected) use an arc
    line jump of 10pt.
 8. If the start of an arrow originates from another arrow (they are connected
