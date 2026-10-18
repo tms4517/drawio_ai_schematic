@@ -21,6 +21,7 @@ Checks (mirror tools/verifyDiagram.md + conventions.md):
  10  No two net segments lie stacked on top of each other
  23  A net name is never crossed by a wire
  24  Edge-label net names float over a horizontal segment, not a vertical one
+ 25  A module instanced N>1 times is drawn as a deck of cards
 """
 import sys, re, html, base64, zlib, urllib.parse, statistics, math
 import xml.etree.ElementTree as ET
@@ -467,6 +468,57 @@ def run(path):
                 break
             acc += L
     log.check(not bad, 24, "Edge-label net names float over a horizontal segment, not a vertical one", bad)
+
+    # 25 a module instanced N>1 times must be drawn as a deck of cards: >=3
+    #    equally-sized rounded rectangles stacked with a small diagonal offset
+    #    (clone primitives/modules/module_deck). The "N = <num>" marker (rule 8)
+    #    does NOT replace the deck visual (rule 7) -- a single box with the label
+    #    is still a single box.
+    N_RE = re.compile(r"\bN\s*=\s*(\d+)\b")
+    rrects = [v for v in cells.values()
+              if v.x is not None and not v.edge and "rounded=1" in v.style]
+
+    def similar(a, b):
+        return (abs(a.w - b.w) <= 0.2 * max(a.w, b.w) and
+                abs(a.h - b.h) <= 0.2 * max(a.h, b.h))
+
+    def is_stacked(a, b):
+        (ax, ay), (bx, by) = center(a), center(b)
+        d = math.hypot(ax - bx, ay - by)
+        return similar(a, b) and 2 < d < 0.6 * min(a.w, a.h, b.w, b.h)
+
+    comp = {v.id: v.id for v in rrects}
+
+    def find(i):
+        while comp[i] != i:
+            comp[i] = comp[comp[i]]
+            i = comp[i]
+        return i
+    for i, a in enumerate(rrects):
+        for b in rrects[i + 1:]:
+            if is_stacked(a, b):
+                comp[find(a.id)] = find(b.id)
+    groups = {}
+    for v in rrects:
+        groups.setdefault(find(v.id), []).append(v)
+    decks = []
+    for g in groups.values():
+        if len(g) >= 3:
+            bbs = [bbox(v) for v in g]
+            decks.append([min(b[0] for b in bbs), min(b[1] for b in bbs),
+                          max(b[2] for b in bbs), max(b[3] for b in bbs)])
+    bad = []
+    for v in cells.values():
+        if v.x is None or v.edge:
+            continue
+        txt = strip(v.value)
+        m = N_RE.search(txt)
+        if not m or int(m.group(1)) <= 1:
+            continue
+        if not any(pt_in(center(v), d) for d in decks):
+            name = txt.split("N =")[0].strip() or txt.split("N=")[0].strip() or txt
+            bad.append(f"module '{name}' is instanced N={m.group(1)} but is not drawn as a deck of cards")
+    log.check(not bad, 25, "Modules instanced N>1 times are drawn as a deck of cards", bad)
 
     passed = log.total - log.fail
     print(f"\n{'ALL %d CHECKS PASSED' % log.total if log.fail == 0 else f'{log.fail}/{log.total} CHECKS FAILED'}")
