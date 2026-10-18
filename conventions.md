@@ -152,6 +152,11 @@ visible.
    the constant's name as text immediately beside its port, just outside the
    shape edge (inputs on the left) and vertically aligned with that port. The
    tag is a port annotation, not a net name, so it needs no wire beneath it.
+8. An inversion that lands directly on a shape's port is drawn as a small bubble
+   (circle) ON that port — do NOT instance a separate inverter for it. A bubble
+   at an input port means the incoming net is inverted before it enters; a
+   bubble at an output port means the output is inverted. Only use a standalone
+   NOT primitive when the inversion sits mid-net, away from any port.
 
 ## Combinational logic
 
@@ -180,6 +185,9 @@ fallback (all white fill, black border):
   `shape=mxgraph.electrical.logic_gates.logic_gate;operation=and|or|xor;`
 - NAND / NOR / XNOR: add `negating=1;negSize=0.15;` to the matching gate
 - NOT (inverter): `shape=mxgraph.electrical.logic_gates.inverter_2;`
+- Inverted port bubble (replaces an inverter sitting at a port): a ~10px circle
+  `ellipse;shapeInside=1;` centred on the port, just outside the shape edge
+  (same bubble `negating=1` adds to a NAND/NOR output).
 - Mirror a gate (output on the left): add `direction=west;`
 - MUX / DEMUX (`-90` to flip):
   `shape=trapezoid;perimeter=trapezoidPerimeter;shapeInside=1;fixedSize=1;rotation=90;`
