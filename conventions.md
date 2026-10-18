@@ -91,6 +91,12 @@ visible.
     port label's centre — never just above or below it.
 18. Net names sit a uniform small gap above their wire — the SAME gap for every
     label — with the text middle-aligned in its box. None lies on the wire.
+19. A net name floats ABOVE a horizontal segment of its wire — never beside a
+    vertical segment. A horizontally-centred label on a vertical wire lands
+    across the wire. Drawio drops an edge's label on the mid-length segment of
+    the route, so make that middle segment horizontal (or move the label onto a
+    horizontal run); if a net is purely vertical, add a short horizontal jog to
+    carry the name.
 
 ## Primitives
 

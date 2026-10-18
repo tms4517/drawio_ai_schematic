@@ -19,8 +19,10 @@ Checks (mirror tools/verifyDiagram.md + conventions.md):
   8  Net labels sit a uniform gap above their net
   9  Wires are orthogonal (no diagonal segments)
  10  No two net segments lie stacked on top of each other
+ 23  A net name is never crossed by a wire
+ 24  Edge-label net names float over a horizontal segment, not a vertical one
 """
-import sys, re, html, base64, zlib, urllib.parse, statistics
+import sys, re, html, base64, zlib, urllib.parse, statistics, math
 import xml.etree.ElementTree as ET
 
 TOL = 3.0           # endpoint / boundary snapping
@@ -428,6 +430,43 @@ def run(path):
     pw, ph = float(model.get("pageWidth") or 0), float(model.get("pageHeight") or 0)
     bad = [] if (pw and ph and pw > ph) else [f"page {pw:.0f}x{ph:.0f} is not landscape"]
     log.check(not bad, 22, "Page is landscape (A4)", bad)
+
+    # 23 net names never crossed by a wire (own wire sits below with a gap, so
+    #    skip it; any other segment through the label box is a collision)
+    bad = []
+    for l in netlabels:
+        own = edge_below(l, edges)
+        lb = bbox(l)
+        for e in edges:
+            if e is own:
+                continue
+            if any(seg_hits_rect(x1, y1, x2, y2, lb, 0.0)
+                   for (x1, y1), (x2, y2) in zip(e.pts, e.pts[1:])):
+                bad.append(f"net name '{l.value}' is crossed by wire {e.id}")
+                break
+    log.check(not bad, 23, "A net name is never crossed by a wire", bad)
+
+    # 24 edge-label net names must float over a HORIZONTAL segment. Drawio drops
+    #    an edge's value label on the mid-length segment of the routed wire; if
+    #    that segment is vertical the horizontally-centred text lands across the
+    #    wire. Flag any labelled edge whose mid-length segment is vertical.
+    bad = []
+    for e in edges:
+        if not e.value or len(e.pts) < 2:
+            continue
+        segs = list(zip(e.pts, e.pts[1:]))
+        total = sum(math.hypot(x2 - x1, y2 - y1) for (x1, y1), (x2, y2) in segs)
+        if total == 0:
+            continue
+        acc, half = 0.0, total / 2
+        for (x1, y1), (x2, y2) in segs:
+            L = math.hypot(x2 - x1, y2 - y1)
+            if acc + L >= half:
+                if abs(x2 - x1) < abs(y2 - y1):
+                    bad.append(f"net name '{e.value}' sits on a vertical segment of wire {e.id}")
+                break
+            acc += L
+    log.check(not bad, 24, "Edge-label net names float over a horizontal segment, not a vertical one", bad)
 
     passed = log.total - log.fail
     print(f"\n{'ALL %d CHECKS PASSED' % log.total if log.fail == 0 else f'{log.fail}/{log.total} CHECKS FAILED'}")
