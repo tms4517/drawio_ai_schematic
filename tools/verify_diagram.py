@@ -36,6 +36,7 @@ TEXT_INSET = 1.0
 GAP_MAX = 30.0      # how far below a label we look for its wire
 GAP_UNIFORM = 3.0   # allowed spread of label->wire gaps
 DECO_MAX = 14.0     # glyphs this small (clock notch, junction) are not shapes
+PORT_TAG_GAP = 60.0 # a constant/parameter tag may hug a port this far outside the shape edge
 PORT_TOKENS = {"D", "Q", "T", "EN", "ARST", "SRST", "CLK", "A", "B", "R", "S", "J", "K",
                "A > B", "A < B", "A == B", ">", "<", "=", "+", "-", "*"}
 
@@ -222,6 +223,26 @@ def classify(cells):
     port_hosts = shape_boxes + submodule_boxes
     ports = [t for t in texts if any(pt_in(center(t), b) for b in port_hosts) or t.value in PORT_TOKENS]
     labels = [t for t in texts if t not in ports]
+
+    # A constant / parameter input (e.g. ROUTER_COL) is not driven by a net: it is
+    # written as text beside its port with no wire/arrow. A tag hugging a shape's
+    # left or right edge (vertically within the shape) with no wire beneath it is
+    # such a port annotation, not a net name.
+    def is_const_tag(l):
+        if edge_below(l, edges) is not None:
+            return False
+        lx0, ly0, lx1, ly1 = bbox(l)
+        cy = center(l)[1]
+        for s in shapes:
+            sx0, sy0, sx1, sy1 = bbox(s)
+            if sy0 - 2 <= cy <= sy1 + 2 and (0 <= sx0 - lx1 <= PORT_TAG_GAP
+                                             or 0 <= lx0 - sx1 <= PORT_TAG_GAP):
+                return True
+        return False
+    const_tags = [l for l in labels if is_const_tag(l)]
+    if const_tags:
+        ports = ports + const_tags
+        labels = [l for l in labels if l not in const_tags]
 
     def is_caption(l):                                            # a shape sits just above it
         lb = bbox(l)

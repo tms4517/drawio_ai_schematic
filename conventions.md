@@ -129,6 +129,11 @@ visible.
    a `*_en`).
 6. For primitives such as FIFOs and memories represent them as rectangles with
    input and output ports labelled according to implementation.
+7. A constant or parameter input (e.g. a localparam like `ROUTER_COL`, or a
+   tie-0/tie-1) is not driven by a net. Do NOT draw a wire/arrow for it — write
+   the constant's name as text immediately beside its port, just outside the
+   shape edge (inputs on the left) and vertically aligned with that port. The
+   tag is a port annotation, not a net name, so it needs no wire beneath it.
 
 ## Combinational logic
 
