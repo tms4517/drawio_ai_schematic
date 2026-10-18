@@ -704,7 +704,29 @@ def run(path):
             bad.append(f"'{strip(s.value)}' has {len(conns)} connected ports but {len(labels_in)} port label(s)")
     log.check(not bad, 29, "Every submodule labels its ports", bad)
 
-    # 30 a rounded-rectangle corner must be a small FIXED radius so a top-right
+    # 30 a module box must be a REAL RTL module instance, named by a single RTL
+    #    identifier (Modules 6). NEVER invent a box to group inline logic that the
+    #    enclosing module writes directly -- registers, muxes, FSM next-state,
+    #    combinational blocks. A descriptive, multi-word name ("output regs",
+    #    "control logic", "packet builder") is the tell-tale of an invented box:
+    #    it hides the very logic the schematic exists to show. Draw that logic
+    #    with primitives (FFs, gates, muxes, a comb cloud) instead. Scope: the
+    #    outer module box and submodule instance boxes (not CDC/clock-domain
+    #    groups, not primitives). Only the PRIMARY name line is checked -- a
+    #    second line (after <br>) may carry a short descriptive note (e.g.
+    #    "2-FF sync") and the "N = <num>" instance-count marker is ignored.
+    ID_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+    bad = []
+    for s in ([mod] + submods):
+        first = re.split(r"<br\s*/?>|&#10;|\n", s.rawval or "", maxsplit=1)[0]
+        nm = N_RE.sub("", strip(first)).strip()
+        if nm and not ID_RE.match(nm):
+            bad.append(f"module box '{strip(s.value)}' primary name is '{nm}', not a single RTL "
+                       f"identifier -- name the real RTL module/instance, or draw the "
+                       f"inline logic with primitives instead of boxing it")
+    log.check(not bad, 30, "Module boxes name a real RTL module (single identifier), not invented groupings", bad)
+
+    # 31 a rounded-rectangle corner must be a small FIXED radius so a top-right
     #    name (and the contents) clear the arc. `arcSize` WITHOUT `absoluteArcSize`
     #    is a PERCENTAGE of the box, so a large module box gets a huge sweeping
     #    corner that the name overruns. Require the effective radius <= CORNER_MAX.
@@ -722,7 +744,57 @@ def run(path):
         if r > CORNER_MAX:
             bad.append(f"'{strip(v.value) or '(unnamed)'}' corner radius {r:.0f}px > {CORNER_MAX:.0f}px "
                        f"(add absoluteArcSize=1 so arcSize={asz or '15'} is a fixed {asz or '15'}px)")
-    log.check(not bad, 30, "Rounded-rectangle corners are a small fixed radius (name clears the arc)", bad)
+    log.check(not bad, 31, "Rounded-rectangle corners are a small fixed radius (name clears the arc)", bad)
+
+    # 32 the schematic must BREATHE: no congested hotspot. Tile the module into
+    #    fixed cells and score each cell's drawing "load" (logic shapes overlapping
+    #    + text labels + wire segments crossing). A cell far denser than the rest,
+    #    WHILE empty cells exist elsewhere, means logic is crammed into a corner
+    #    with usable whitespace going to waste -- widen the page and spread the
+    #    block out (this is what the PNG shows as a dark, unreadable cluster).
+    #    Reported with the hotspot's bounding box so the author knows where to
+    #    decongest. A uniformly busy diagram with no spare room is NOT flagged
+    #    (there is nowhere to spread to -- grow the canvas instead).
+    CELL = 120.0
+    MAXLOAD = 18.0
+    ncol = max(1, int(math.ceil((mb[2] - mb[0]) / CELL)))
+    nrow = max(1, int(math.ceil((mb[3] - mb[1]) / CELL)))
+    load = [[0.0] * ncol for _ in range(nrow)]
+
+    def _cell(x, y):
+        return (min(ncol - 1, max(0, int((x - mb[0]) // CELL))),
+                min(nrow - 1, max(0, int((y - mb[1]) // CELL))))
+
+    def _add_rect(b, w):
+        cx0, cy0 = _cell(b[0], b[1]); cx1, cy1 = _cell(b[2], b[3])
+        for cy in range(cy0, cy1 + 1):
+            for cx in range(cx0, cx1 + 1):
+                load[cy][cx] += w
+
+    for s in shapes:                                  # gates / FFs / comparators / single boxes
+        _add_rect(bbox(s), 2.0)
+    for t in (c["labels"] + c["ports"]):
+        _add_rect(bbox(t), 1.0)
+    for e in edges:                                   # a wire adds load to every cell it threads
+        seen = set()
+        for (x1, y1), (x2, y2) in zip(e.pts, e.pts[1:]):
+            steps = int(max(abs(x2 - x1), abs(y2 - y1)) // 20) + 1
+            for i in range(steps + 1):
+                seen.add(_cell(x1 + (x2 - x1) * i / steps, y1 + (y2 - y1) * i / steps))
+        for (cx, cy) in seen:
+            load[cy][cx] += 1.0
+
+    empties = sum(1 for r in load for v in r if v == 0)
+    roomy = empties >= 0.2 * ncol * nrow              # whitespace exists to spread into
+    bad = []
+    if roomy:
+        for cy in range(nrow):
+            for cx in range(ncol):
+                if load[cy][cx] > MAXLOAD:
+                    x0, y0 = mb[0] + cx * CELL, mb[1] + cy * CELL
+                    bad.append(f"dense cluster ~({x0:.0f}-{x0 + CELL:.0f}, {y0:.0f}-{y0 + CELL:.0f}) "
+                               f"load {load[cy][cx]:.0f} > {MAXLOAD:.0f} (spread it into the empty space)")
+    log.check(not bad, 32, "No congested hotspot (dense cluster while whitespace is wasted)", bad)
 
     passed = log.total - log.fail
     print(f"\n{'ALL %d CHECKS PASSED' % log.total if log.fail == 0 else f'{log.fail}/{log.total} CHECKS FAILED'}")

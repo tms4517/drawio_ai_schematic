@@ -19,6 +19,12 @@ Use the examples as a guide for creating schematics.
 2. Orientation must be landscape.
 3. Only use multiple pages if all the logic cannot be neatly represented on one
    page.
+4. The schematic must BREATHE: do not cram logic into one corner while the rest
+   of the page sits empty. Spread shapes out so each has room and wires have
+   clear channels. If a region is getting dense, WIDEN the page and move the
+   block into the whitespace rather than packing it tighter or shrinking text.
+   The verifier flags a congested hotspot (a dense cluster of shapes/labels/wires
+   with empty space available to spread into).
 
 ## Text
 
@@ -35,21 +41,30 @@ visible.
 ## Modules
 
 1. Use rounded rectangles to represent modules boundaries.
-2. The rounded rectangles should have an arc size of 5. Set `absoluteArcSize=1`
+2. A module box represents a REAL module INSTANCE in the RTL — something the
+   enclosing module instantiates by its module type. ONLY draw a box for such an
+   instance. Inline logic the module writes in its own body — registers (`always_ff`),
+   muxes, FSM next-state, combinational `always_comb` blocks — is NOT a submodule;
+   draw it with primitives (FFs, gates, muxes, a comb cloud). NEVER invent a box
+   to group inline logic (e.g. `output regs`, `control logic`, `packet builder`):
+   a box named with a descriptive phrase instead of an RTL identifier hides the
+   very logic the schematic exists to show. A module/instance name is always a
+   single RTL identifier (no spaces).
+3. The rounded rectangles should have an arc size of 5. Set `absoluteArcSize=1`
    so `arcSize=5` is a fixed 5px corner; without it `arcSize` is a PERCENTAGE of
    the box, so a large module gets a huge sweeping corner that the top-right name
    overruns.
-3. The rounded rectangle should neatly enclose the shapes and text it contains
+4. The rounded rectangle should neatly enclose the shapes and text it contains
    within maintaining a 2mm margin to the internal shapes.
-4. Use a unique colour for each unique module background.
-5. Module names should be on the top right written in 10px.
-6. A module label is the module (type) name only — never embed the instance
-   name in it (e.g. use `xlnx_sync_bit`, not `xlnx_sync_bit u_syncInitiate`).
-7. If a module has been instances N times, rather than drawing the module N
+5. Use a unique colour for each unique module background.
+6. Module names should be on the top right written in 10px.
+7. A module label is the module (type) name only — never embed the instance
+   name in it (e.g. use `sync_bit`, not `sync_bit u_syncInitiate`).
+8. If a module has been instances N times, rather than drawing the module N
    times,represent it as a deck of cards.
-8. If a module has been instances N times, include N = ? next to the module
+9. If a module has been instances N times, include N = ? next to the module
    name.
-9. Every submodule box labels its ports with the instance's actual RTL port
+10. Every submodule box labels its ports with the instance's actual RTL port
    names, placed inside the box next to each connecting wire (read them from the
    instantiation in the RTL). A reader identifies a wire by the port it lands on.
    For a deck of cards this is identical to a single box: place the port-name

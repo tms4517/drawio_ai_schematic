@@ -68,7 +68,9 @@ shape/text, no arrowhead on a junction, uniform label gap, orthogonal wires, no
 stacked nets) AND style (all text Monospace + black, no legend, 8px nets, no `[1]`
 on single-bit nets, buses drawn thick, transparent labels, white/black primitives,
 rounded/borderless containers, right-aligned 10px module names, light backgrounds,
-landscape page) — with the offending coordinates. Fix each FAIL and re-run until it
+landscape page) AND congestion (a dense hotspot of shapes/labels/wires while empty
+whitespace is wasted — what the PNG shows as a dark, unreadable cluster) — with the
+offending coordinates. Fix each FAIL and re-run until it
 prints `ALL N CHECKS PASSED`. Feed the log back in to drive the fixes.
 
 Step 2 — render headlessly and eyeball (ALWAYS use absolute paths — the shell
@@ -81,6 +83,10 @@ wrapper can drop a leading `cd`):
 - View the PNG and confirm: primitives drew (an empty box = wrong stencil name),
   arrows land on ports, buses are thick, colours/borders correct, fits one A4
   landscape page.
+- CONGESTION: look for any dark, crammed cluster of shapes/labels/wires while other
+  parts of the page sit empty. The verifier's congestion check (check 32) flags such
+  hotspots by bounding box; the fix is to widen the page and SPREAD that block into
+  the whitespace (give each primitive room, lengthen wires), not to shrink text.
 - Edit and repeat Steps 1–2 until the verifier passes and it reads cleanly.
 
 ## Reference files
@@ -97,5 +103,8 @@ wrapper can drop a leading `cd`):
 
 - Prioritize understanding over implementation accuracy.
 - Readable by a junior engineer.
+- A module box is ONLY a real RTL module instance (named by its RTL module type).
+  Never invent a box to group inline logic (`output regs`, `control logic`, ...) —
+  that hides logic. Draw inline registers/muxes/combinational blocks with primitives.
 - Ignore glue logic and implementation registers unless central to understanding.
 - A4 landscape; add pages only when one cannot hold the logic neatly.
