@@ -24,6 +24,7 @@ Checks (mirror tools/verifyDiagram.md + conventions.md):
  25  A module instanced N>1 times is drawn as a deck of cards
  26  Module inputs enter on the left edge, outputs exit on the right edge
  27  No stray descriptive caption inside a module
+ 28  Submodule ports sit on a vertical edge (left/right), never top/bottom
 """
 import sys, re, html, base64, zlib, urllib.parse, statistics, math
 import xml.etree.ElementTree as ET
@@ -586,6 +587,51 @@ def run(path):
         if (ctr[1] - hb[1]) <= BAND and t.w >= 0.5 * (hb[2] - hb[0]):
             bad.append(f"stray caption '{val}' in module '{strip(host.value)}'")
     log.check(not bad, 27, "No stray descriptive caption inside a module", bad)
+
+    # 28 submodule ports must sit on a VERTICAL edge (left or right), never the
+    #    top or bottom -- a port on the top/bottom breaks left-to-right signal
+    #    tracing (e.g. a net lifted out of a FIFO's top to reach the module edge).
+    #    Direction (which of left/right) is NOT enforced: a synchronizer in a
+    #    feedback path is legitimately mirrored (input right, output left). Scope:
+    #    named rounded-rect submodule instances only -- not primitives (FF
+    #    clk/reset enter top/bottom), not the outer module (check 26), not CDC
+    #    groups (containers, not leaf shapes).
+    def box_side(p, b):
+        if abs(p[0] - b[0]) <= TOL and b[1] - TOL <= p[1] <= b[3] + TOL: return "left"
+        if abs(p[0] - b[2]) <= TOL and b[1] - TOL <= p[1] <= b[3] + TOL: return "right"
+        if abs(p[1] - b[1]) <= TOL and b[0] - TOL <= p[0] <= b[2] + TOL: return "top"
+        if abs(p[1] - b[3]) <= TOL and b[0] - TOL <= p[0] <= b[2] + TOL: return "bottom"
+        return None
+
+    def similar2(a, b):
+        return (abs(a.w - b.w) <= 0.2 * max(a.w, b.w) and
+                abs(a.h - b.h) <= 0.2 * max(a.h, b.h))
+    # a submodule box is a named rounded rect that holds no real logic -- only its
+    # own deck cards (unnamed, similar-sized rects). That covers both single-box
+    # and deck-of-cards instances, while excluding the outer module and CDC/group
+    # containers (which hold primitives/FFs/other submodules).
+    rrv = [v for v in cells.values() if v.x is not None and not v.edge and "rounded=1" in v.style]
+    sig = [v for v in cells.values() if v.x is not None and not v.edge
+           and not v.style.startswith("text;") and "ellipse" not in v.style
+           and max(v.w, v.h) > DECO_MAX]
+    submods = []
+    for R in rrv:
+        if not strip(R.value) or R is mod:
+            continue
+        Rb = bbox(R)
+        real = [o for o in sig if o is not R and pt_in(center(o), Rb)
+                and not (not strip(o.value) and "rounded=1" in o.style and similar2(o, R))]
+        if not real:
+            submods.append(R)
+    bad = []
+    for e in edges:
+        name = strip(e.value) or "(unnamed net)"
+        for p in (e.pts[0], e.pts[-1]):
+            for s in submods:
+                side = box_side(p, bbox(s))
+                if side in ("top", "bottom"):
+                    bad.append(f"net '{name}' connects to {strip(s.value)} on the {side} edge (submodule ports must be on the left or right edge)")
+    log.check(not bad, 28, "Submodule ports are on a vertical edge, never top/bottom", bad)
 
     passed = log.total - log.fail
     print(f"\n{'ALL %d CHECKS PASSED' % log.total if log.fail == 0 else f'{log.fail}/{log.total} CHECKS FAILED'}")

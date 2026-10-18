@@ -61,7 +61,11 @@ visible.
    A module port lands on the LEFT (inputs) or RIGHT (outputs) edge ONLY — never
    route a port to the top or bottom edge to shorten a wire. Keeping inputs left
    and outputs right is what lets a reader trace signal flow; a long wire is an
-   acceptable cost, a wrong-side port is not.
+   acceptable cost, a wrong-side port is not. This applies to every shape,
+   including submodule instances (single box or deck of cards): their nets attach
+   on a LEFT/RIGHT edge, never top/bottom. A submodule in a feedback path may be
+   mirrored (input on the right, output on the left), but its ports stay on the
+   vertical edges.
 7. If an arrow overlaps another arrow (not intended to be connected) use an arc
    line jump of 10pt.
 8. If the start of an arrow originates from another arrow (they are connected
