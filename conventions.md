@@ -25,6 +25,13 @@ Use the examples as a guide for creating schematics.
    block into the whitespace rather than packing it tighter or shrinking text.
    The verifier flags a congested hotspot (a dense cluster of shapes/labels/wires
    with empty space available to spread into).
+5. Co-locate control/decode logic with the datapath element it drives. If a
+   comparator+AND produces the select for a mux, place it immediately beside
+   that mux as a self-contained block. Do NOT build one global column of decode
+   logic that feeds distant datapath slices through long cross-page wires — that
+   central column is the classic source of congestion and unreadable wire runs.
+   Per-lane/per-direction logic should read as repeated local blocks, each with
+   its decode next to its register/mux.
 
 ## Text
 
@@ -129,6 +136,11 @@ visible.
     the route, so make that middle segment horizontal (or move the label onto a
     horizontal run); if a net is purely vertical, add a short horizontal jog to
     carry the name.
+20. When a wire carries a part-select of a wider packet/bus (an RTL slice like
+    `packet[2*W-1 -: W]`), label it with the extracted field and its meaning
+    (e.g. `destinationRow[3:2]`, `destinationCol[1:0]`) rather than the whole
+    `packet[77]`. Showing which field each consumer reads is what explains the
+    logic — especially for decode/compare paths that key off packet fields.
 
 ## Primitives
 
@@ -157,6 +169,15 @@ visible.
    at an input port means the incoming net is inverted before it enters; a
    bubble at an output port means the output is inverted. Only use a standalone
    NOT primitive when the inversion sits mid-net, away from any port.
+9. Map each RTL operator to its matching primitive, never a coincidental
+   shorthand. A conditional/ternary assignment `y <= sel ? a : b` (or an
+   `if/else` selecting between data sources) is a 2:1 MUX: draw `a`/`b` on the
+   data inputs and `sel` on the select. This holds even when one arm is a
+   constant — `y <= sel ? a : '0` is a MUX with a `'0` data input, NOT an AND
+   gate. An AND/OR mask only happens to match when the false arm is `'0`/`'1`
+   and it hides the real select, so do not use it for a ternary. Likewise
+   `+`->adder, `-`->subtractor, `*`->multiplier, `==`/`<`/`>`->comparator,
+   reduction `|`/`&`->one wide OR/AND gate.
 
 ## Combinational logic
 

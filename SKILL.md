@@ -106,5 +106,12 @@ wrapper can drop a leading `cd`):
 - A module box is ONLY a real RTL module instance (named by its RTL module type).
   Never invent a box to group inline logic (`output regs`, `control logic`, ...) —
   that hides logic. Draw inline registers/muxes/combinational blocks with primitives.
+- Map RTL operators to their matching primitive: a conditional/ternary
+  `y <= sel ? a : b` (even `sel ? a : '0`) is a 2:1 MUX, NOT an AND-mask;
+  `== < >` are comparators, `+ - *` are adder/subtractor/multiplier, a reduction
+  is one wide gate. See `conventions.md` Primitives §9.
+- Co-locate decode/control logic with the datapath element it drives (the mux/FF
+  it selects), as self-contained per-lane blocks — never a global decode column
+  feeding distant slices through long wires. See `conventions.md` Paper §5.
 - Ignore glue logic and implementation registers unless central to understanding.
 - A4 landscape; add pages only when one cannot hold the logic neatly.
