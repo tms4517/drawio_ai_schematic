@@ -22,6 +22,7 @@ Checks (mirror tools/verifyDiagram.md + conventions.md):
  23  A net name is never crossed by a wire
  24  Edge-label net names float over a horizontal segment, not a vertical one
  25  A module instanced N>1 times is drawn as a deck of cards
+ 26  Module inputs enter on the left edge, outputs exit on the right edge
 """
 import sys, re, html, base64, zlib, urllib.parse, statistics, math
 import xml.etree.ElementTree as ET
@@ -519,6 +520,25 @@ def run(path):
             name = txt.split("N =")[0].strip() or txt.split("N=")[0].strip() or txt
             bad.append(f"module '{name}' is instanced N={m.group(1)} but is not drawn as a deck of cards")
     log.check(not bad, 25, "Modules instanced N>1 times are drawn as a deck of cards", bad)
+
+    # 26 module-boundary ports enter/leave on the correct side (conventions
+    #    Arrows 5-6): inputs (i_*) must touch the LEFT edge of the outer module,
+    #    outputs (o_*) the RIGHT edge. Flag the unambiguous wrong-side case -- an
+    #    input whose boundary endpoint is on the right edge, or an output whose
+    #    boundary endpoint is on the left edge. (Top/bottom are left alone.)
+    def on_vedge(p, xref):
+        return abs(p[0] - xref) <= TOL and mb[1] - TOL <= p[1] <= mb[3] + TOL
+    bad = []
+    for e in edges:
+        name = strip(e.value)
+        if not name:
+            continue
+        ends = (e.pts[0], e.pts[-1])
+        if name.startswith("i_") and any(on_vedge(p, mb[2]) for p in ends):
+            bad.append(f"input '{name}' enters on the right edge (inputs must enter on the left)")
+        elif name.startswith("o_") and any(on_vedge(p, mb[0]) for p in ends):
+            bad.append(f"output '{name}' leaves on the left edge (outputs must exit on the right)")
+    log.check(not bad, 26, "Module inputs enter on the left edge, outputs exit on the right", bad)
 
     passed = log.total - log.fail
     print(f"\n{'ALL %d CHECKS PASSED' % log.total if log.fail == 0 else f'{log.fail}/{log.total} CHECKS FAILED'}")
