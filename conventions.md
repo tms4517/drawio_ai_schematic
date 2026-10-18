@@ -35,7 +35,10 @@ visible.
 ## Modules
 
 1. Use rounded rectangles to represent modules boundaries.
-2. The rounded rectangles should have an arc size of 5.
+2. The rounded rectangles should have an arc size of 5. Set `absoluteArcSize=1`
+   so `arcSize=5` is a fixed 5px corner; without it `arcSize` is a PERCENTAGE of
+   the box, so a large module gets a huge sweeping corner that the top-right name
+   overruns.
 3. The rounded rectangle should neatly enclose the shapes and text it contains
    within maintaining a 2mm margin to the internal shapes.
 4. Use a unique colour for each unique module background.

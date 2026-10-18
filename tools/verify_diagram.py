@@ -26,6 +26,7 @@ Checks (mirror tools/verifyDiagram.md + conventions.md):
  27  No stray descriptive caption inside a module
  28  Submodule inputs enter on the left edge, outputs leave on the right edge
  29  Every submodule labels its ports
+ 30  Rounded-rectangle corners are a small fixed radius (name clears the arc)
 """
 import sys, re, html, base64, zlib, urllib.parse, statistics, math
 import xml.etree.ElementTree as ET
@@ -702,6 +703,26 @@ def run(path):
         if len(labels_in) < len(conns):
             bad.append(f"'{strip(s.value)}' has {len(conns)} connected ports but {len(labels_in)} port label(s)")
     log.check(not bad, 29, "Every submodule labels its ports", bad)
+
+    # 30 a rounded-rectangle corner must be a small FIXED radius so a top-right
+    #    name (and the contents) clear the arc. `arcSize` WITHOUT `absoluteArcSize`
+    #    is a PERCENTAGE of the box, so a large module box gets a huge sweeping
+    #    corner that the name overruns. Require the effective radius <= CORNER_MAX.
+    CORNER_MAX = 20.0
+    bad = []
+    for v in cells.values():
+        if v.x is None or v.edge or "rounded=1" not in v.style:
+            continue
+        asz = sattr(v.style, "arcSize")
+        arc = float(asz) if asz else 15.0        # drawio default rounding is 15%
+        if sattr(v.style, "absoluteArcSize") == "1":
+            r = min(v.w / 2, v.h / 2, arc)
+        else:
+            r = min(v.w, v.h) * arc / 100.0
+        if r > CORNER_MAX:
+            bad.append(f"'{strip(v.value) or '(unnamed)'}' corner radius {r:.0f}px > {CORNER_MAX:.0f}px "
+                       f"(add absoluteArcSize=1 so arcSize={asz or '15'} is a fixed {asz or '15'}px)")
+    log.check(not bad, 30, "Rounded-rectangle corners are a small fixed radius (name clears the arc)", bad)
 
     passed = log.total - log.fail
     print(f"\n{'ALL %d CHECKS PASSED' % log.total if log.fail == 0 else f'{log.fail}/{log.total} CHECKS FAILED'}")
