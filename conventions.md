@@ -46,6 +46,9 @@ visible.
    times,represent it as a deck of cards.
 8. If a module has been instances N times, include N = ? next to the module
    name.
+9. Every submodule box labels its ports with the instance's actual RTL port
+   names, placed inside the box next to each connecting wire (read them from the
+   instantiation in the RTL). A reader identifies a wire by the port it lands on.
 
 ### Arrows
 
@@ -62,10 +65,9 @@ visible.
    route a port to the top or bottom edge to shorten a wire. Keeping inputs left
    and outputs right is what lets a reader trace signal flow; a long wire is an
    acceptable cost, a wrong-side port is not. This applies to every shape,
-   including submodule instances (single box or deck of cards): their nets attach
-   on a LEFT/RIGHT edge, never top/bottom. A submodule in a feedback path may be
-   mirrored (input on the right, output on the left), but its ports stay on the
-   vertical edges.
+   including submodule instances (single box or deck of cards): inputs enter on
+   the LEFT edge and outputs leave on the RIGHT edge — NO exceptions. A submodule
+   in a feedback path is NOT mirrored; route the wire AROUND the block instead.
 7. If an arrow overlaps another arrow (not intended to be connected) use an arc
    line jump of 10pt.
 8. If the start of an arrow originates from another arrow (they are connected

@@ -24,7 +24,8 @@ Checks (mirror tools/verifyDiagram.md + conventions.md):
  25  A module instanced N>1 times is drawn as a deck of cards
  26  Module inputs enter on the left edge, outputs exit on the right edge
  27  No stray descriptive caption inside a module
- 28  Submodule ports sit on a vertical edge (left/right), never top/bottom
+ 28  Submodule inputs enter on the left edge, outputs leave on the right edge
+ 29  Every submodule labels its ports
 """
 import sys, re, html, base64, zlib, urllib.parse, statistics, math
 import xml.etree.ElementTree as ET
@@ -588,14 +589,14 @@ def run(path):
             bad.append(f"stray caption '{val}' in module '{strip(host.value)}'")
     log.check(not bad, 27, "No stray descriptive caption inside a module", bad)
 
-    # 28 submodule ports must sit on a VERTICAL edge (left or right), never the
-    #    top or bottom -- a port on the top/bottom breaks left-to-right signal
-    #    tracing (e.g. a net lifted out of a FIFO's top to reach the module edge).
-    #    Direction (which of left/right) is NOT enforced: a synchronizer in a
-    #    feedback path is legitimately mirrored (input right, output left). Scope:
-    #    named rounded-rect submodule instances only -- not primitives (FF
-    #    clk/reset enter top/bottom), not the outer module (check 26), not CDC
-    #    groups (containers, not leaf shapes).
+    # 28 submodule ports obey the SAME side rule as the outer module (Arrows 5-6)
+    #    with NO exceptions: an input enters on the LEFT edge, an output leaves on
+    #    the RIGHT edge -- even in a feedback path (route the wire AROUND the block
+    #    rather than mirroring it). Net names are arbitrary, so direction comes
+    #    from the arrow: the SOURCE end of a net is its driver (output) and the
+    #    arrow-head TARGET end is a sink (input). Scope: named rounded-rect
+    #    submodule instances (single box or deck) -- not primitives (FF clk/reset
+    #    enter top/bottom), not the outer module (check 26), not CDC groups.
     def box_side(p, b):
         if abs(p[0] - b[0]) <= TOL and b[1] - TOL <= p[1] <= b[3] + TOL: return "left"
         if abs(p[0] - b[2]) <= TOL and b[1] - TOL <= p[1] <= b[3] + TOL: return "right"
@@ -626,12 +627,38 @@ def run(path):
     bad = []
     for e in edges:
         name = strip(e.value) or "(unnamed net)"
-        for p in (e.pts[0], e.pts[-1]):
-            for s in submods:
-                side = box_side(p, bbox(s))
-                if side in ("top", "bottom"):
-                    bad.append(f"net '{name}' connects to {strip(s.value)} on the {side} edge (submodule ports must be on the left or right edge)")
-    log.check(not bad, 28, "Submodule ports are on a vertical edge, never top/bottom", bad)
+        src, tgt = e.pts[0], e.pts[-1]
+        has_arrow = "endArrow=none" not in e.style
+        for s in submods:
+            b = bbox(s)
+            ss = box_side(src, b)
+            if ss and ss != "right":
+                bad.append(f"net '{name}' leaves {strip(s.value)} on the {ss} edge (outputs must leave on the right)")
+            ts = box_side(tgt, b)
+            if ts and has_arrow and ts != "left":
+                bad.append(f"net '{name}' enters {strip(s.value)} on the {ts} edge (inputs must enter on the left)")
+            elif ts in ("top", "bottom"):
+                bad.append(f"net '{name}' touches {strip(s.value)} on the {ts} edge (ports must be on the left or right)")
+    log.check(not bad, 28, "Submodule inputs enter on the left, outputs leave on the right", bad)
+
+    # 29 every submodule box labels its ports so a reader identifies each wire by
+    #    the port name it lands on (the instance's RTL port names). Flag a
+    #    submodule with nets on its vertical edges but fewer internal port-name
+    #    labels than connected ports.
+    texts = [t for t in cells.values()
+             if t.x is not None and not t.edge and t.style.startswith("text;")]
+    bad = []
+    for s in submods:
+        sb = bbox(s)
+        conns = {(round(p[0] / 3), round(p[1] / 3)) for e in edges
+                 for p in (e.pts[0], e.pts[-1]) if box_side(p, sb) in ("left", "right")}
+        if not conns:
+            continue
+        labels_in = [t for t in texts if pt_in(center(t), sb) and strip(t.value)
+                     and not re.search(r"\bN\s*=\s*\d+", strip(t.value))]
+        if len(labels_in) < len(conns):
+            bad.append(f"'{strip(s.value)}' has {len(conns)} connected ports but {len(labels_in)} port label(s)")
+    log.check(not bad, 29, "Every submodule labels its ports", bad)
 
     passed = log.total - log.fail
     print(f"\n{'ALL %d CHECKS PASSED' % log.total if log.fail == 0 else f'{log.fail}/{log.total} CHECKS FAILED'}")
