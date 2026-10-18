@@ -25,13 +25,6 @@ Use the examples as a guide for creating schematics.
    block into the whitespace rather than packing it tighter or shrinking text.
    The verifier flags a congested hotspot (a dense cluster of shapes/labels/wires
    with empty space available to spread into).
-5. Co-locate control/decode logic with the datapath element it drives. If a
-   comparator+AND produces the select for a mux, place it immediately beside
-   that mux as a self-contained block. Do NOT build one global column of decode
-   logic that feeds distant datapath slices through long cross-page wires — that
-   central column is the classic source of congestion and unreadable wire runs.
-   Per-lane/per-direction logic should read as repeated local blocks, each with
-   its decode next to its register/mux.
 
 ## Text
 
@@ -53,7 +46,7 @@ visible.
    instance. Inline logic the module writes in its own body — registers (`always_ff`),
    muxes, FSM next-state, combinational `always_comb` blocks — is NOT a submodule;
    draw it with primitives (FFs, gates, muxes, a comb cloud). NEVER invent a box
-   to group inline logic (e.g. `output regs`, `control logic`, `packet builder`):
+   to group inline logic,
    a box named with a descriptive phrase instead of an RTL identifier hides the
    very logic the schematic exists to show. A module/instance name is always a
    single RTL identifier (no spaces).
@@ -100,7 +93,7 @@ visible.
 7. If an arrow overlaps another arrow (not intended to be connected) use an arc
    line jump of 10pt.
 8. If the start of an arrow originates from another arrow (they are connected
-   together) the the connection shape at the start must be a circle.
+   together) the connection shape at the start must be a circle.
 9. Arrows represent nets in RTL. The net names should appear above the arrows
    in 8px. In Drawio a label sits ON the line by default; add
    `verticalAlign=bottom` to the edge style so the name floats above the wire,
@@ -178,6 +171,9 @@ visible.
    and it hides the real select, so do not use it for a ternary. Likewise
    `+`->adder, `-`->subtractor, `*`->multiplier, `==`/`<`/`>`->comparator,
    reduction `|`/`&`->one wide OR/AND gate.
+10. Co-locate control/decode logic with the datapath element it drives. If a
+    comparator+AND produces the select for a mux, place it immediately beside
+    that mux as a self-contained block.
 
 ## Combinational logic
 
