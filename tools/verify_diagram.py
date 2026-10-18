@@ -23,6 +23,7 @@ Checks (mirror tools/verifyDiagram.md + conventions.md):
  24  Edge-label net names float over a horizontal segment, not a vertical one
  25  A module instanced N>1 times is drawn as a deck of cards
  26  Module inputs enter on the left edge, outputs exit on the right edge
+ 27  No stray descriptive caption inside a module
 """
 import sys, re, html, base64, zlib, urllib.parse, statistics, math
 import xml.etree.ElementTree as ET
@@ -539,6 +540,42 @@ def run(path):
         elif name.startswith("o_") and any(on_vedge(p, mb[0]) for p in ends):
             bad.append(f"output '{name}' leaves on the left edge (outputs must exit on the right)")
     log.check(not bad, 26, "Module inputs enter on the left edge, outputs exit on the right", bad)
+
+    # 27 a module is labelled by its box name only (Modules 6) and the schematic
+    #    carries no explanatory text (Text 3). Flag a separate text cell sitting
+    #    in a module's title band that spans most of the box width yet is neither
+    #    a port, a wired net name, nor the instance-count (N=) marker -- i.e. a
+    #    descriptive sub-caption like "round-robin" under an arbiter.
+    BAND = 30.0
+    named = [v for v in rrects if strip(v.value)]        # rounded-rect module boxes
+
+    def portish(s):
+        return (s in PORT_TOKENS or re.match(r"^[io]_", s) is not None
+                or re.search(r"\[[^\]]+\]$", s) is not None)
+
+    def wired(t):
+        tb = bbox(t)
+        for e in edges:
+            for p in (e.pts[0], e.pts[-1]):
+                if tb[0] - TOL <= p[0] <= tb[2] + TOL and tb[1] - TOL <= p[1] <= tb[3] + TOL:
+                    return True
+        return edge_below(t, edges) is not None
+    bad = []
+    for t in cells.values():
+        if t.x is None or t.edge or not t.style.startswith("text;"):
+            continue
+        val = strip(t.value)
+        if not val or portish(val) or re.search(r"\bN\s*=\s*\d+", val) or wired(t):
+            continue
+        ctr = center(t)
+        host = min((m for m in named if pt_in(ctr, bbox(m))),
+                   key=lambda m: m.w * m.h, default=None)
+        if host is None:
+            continue
+        hb = bbox(host)
+        if (ctr[1] - hb[1]) <= BAND and t.w >= 0.5 * (hb[2] - hb[0]):
+            bad.append(f"stray caption '{val}' in module '{strip(host.value)}'")
+    log.check(not bad, 27, "No stray descriptive caption inside a module", bad)
 
     passed = log.total - log.fail
     print(f"\n{'ALL %d CHECKS PASSED' % log.total if log.fail == 0 else f'{log.fail}/{log.total} CHECKS FAILED'}")
